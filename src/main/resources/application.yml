@@ -10,3 +10,10 @@ media:
   name: 媒体管理器
   version: 1.0.0
   upload-dir: /data/media/uploads
+
+# 第9/10题：app 配置（@Value 注入演示）
+app:
+  name: media-platform
+  version: 1.0.0
+  admin:
+    email: admin@media.com
