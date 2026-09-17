@@ -1,7 +1,7 @@
 package pre.wc.mediamanager.service;
 
 import org.springframework.stereotype.Service;
-import pre.wc.mediamanager.entity.Media;
+import pre.wc.mediamanager.pojo.entity.Media;
 
 import java.util.List;
 

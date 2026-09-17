@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pre.wc.mediamanager.config.MediaProperties;
-import pre.wc.mediamanager.entity.Media;
+import pre.wc.mediamanager.pojo.entity.Media;
 import pre.wc.mediamanager.service.MediaService;
 
 import java.util.List;

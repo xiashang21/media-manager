@@ -1,19 +1,20 @@
-package pre.wc.mediamanager.entity;
+package pre.wc.mediamanager.pojo.dto;
 
 /**
- * 媒体实体
+ * 媒体数据传输对象（pojo/dto 层）。
+ * 用于接口层与外部交互，隔离实体与前端展示。
  */
-public class Media {
+public class MediaDTO {
 
     private Long id;
     private String title;
     private String type;
     private String url;
 
-    public Media() {
+    public MediaDTO() {
     }
 
-    public Media(Long id, String title, String type, String url) {
+    public MediaDTO(Long id, String title, String type, String url) {
         this.id = id;
         this.title = title;
         this.type = type;
