@@ -6,4 +6,5 @@ package pre.wc.mediamanager.mapper;
  * 后续可在此接入 MyBatis 或 Spring Data JPA 完成持久化操作。
  */
 public interface MediaMapper {
+
 }
