@@ -88,7 +88,7 @@ server:
   port: 8080
 
 mybatis:
-  mapper-locations: classpath:mapper/*.xml
+  mapper-locations: classpath*:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
 
@@ -114,7 +114,7 @@ $env:VIDEO_UPLOAD_PATH = "./uploads/"
 在项目根目录执行：
 
 ```powershell
-cd C:\Users\xiashang\Desktop\java\media-manager
+# 在项目根目录执行
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -143,7 +143,7 @@ Stop-Process -Id <PID> -Force
 ## 七、启动前端
 
 ```powershell
-cd C:\Users\xiashang\Desktop\java\media-manager\video-frontend
+cd video-frontend
 npm install
 npm run dev
 ```
@@ -252,13 +252,11 @@ Content-Type: video/mp4
 检查：
 
 - `target/classes/mapper/VideoMapper.xml` 是否存在
-- `mapper-locations` 是否为 `classpath:mapper/*.xml`
+- `mapper-locations` 是否为 `classpath*:mapper/*.xml`
 - XML 的 `namespace` 是否为 `pre.wc.mediamanager.mapper.VideoMapper`
 - XML 的 `id` 是否和 Mapper 方法名一致
 
 **4. 前端请求跨域失败**
 
 确认后端 `WebConfig` 允许 `http://localhost:5173`，并暴露 `Content-Range`、`Accept-Ranges`、`Content-Length`。
-
-
 
