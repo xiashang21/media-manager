@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pre.wc.mediamanager.mapper.VideoMapper">
+
+    <resultMap id="VideoMap" type="pre.wc.mediamanager.entity.Video">
+        <id     column="id"            property="id"/>
+        <result column="title"         property="title"/>
+        <result column="description"   property="description"/>
+        <result column="file_name"     property="fileName"/>
+        <result column="original_name" property="originalName"/>
+        <result column="url"           property="url"/>
+        <result column="cover_url"     property="coverUrl"/>
+        <result column="size"          property="size"/>
+        <result column="duration"      property="duration"/>
+        <result column="format"        property="format"/>
+        <result column="category"      property="category"/>
+        <result column="tags"          property="tags"/>
+        <result column="play_count"    property="playCount"/>
+        <result column="like_count"    property="likeCount"/>
+        <result column="uploader"      property="uploader"/>
+        <result column="status"        property="status"/>
+        <result column="create_time"   property="createTime"/>
+        <result column="update_time"   property="updateTime"/>
+        <result column="deleted"       property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, title, description, file_name, original_name, url, cover_url,
+        size, duration, format, category, tags, play_count, like_count,
+        uploader, status, create_time, update_time, deleted
+    </sql>
+
+    <insert id="insert" parameterType="pre.wc.mediamanager.entity.Video"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO video
+        (title, description, file_name, original_name, url, cover_url,
+         size, duration, format, category, tags, play_count, like_count,
+         uploader, status, create_time, update_time, deleted)
+        VALUES
+            (#{title}, #{description}, #{fileName}, #{originalName}, #{url}, #{coverUrl},
+             #{size}, #{duration}, #{format}, #{category}, #{tags}, #{playCount}, #{likeCount},
+             #{uploader}, #{status}, NOW(), NOW(), 0)
+    </insert>
+
+    <select id="selectById" resultMap="VideoMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM video
+        WHERE id = #{id} AND deleted = 0 AND status = 1
+    </select>
+
+    <select id="selectList" resultMap="VideoMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM video
+        <where>
+            deleted = 0
+            AND status = 1
+            <if test="q.keyword != null and q.keyword != ''">
+                AND (title LIKE CONCAT('%', #{q.keyword}, '%')
+                OR description LIKE CONCAT('%', #{q.keyword}, '%'))
+            </if>
+            <if test="q.category != null and q.category != '' and q.category != '全部'">
+                AND category = #{q.category}
+            </if>
+        </where>
+        <choose>
+            <when test="q.sortBy == 'play_count'">ORDER BY play_count</when>
+            <when test="q.sortBy == 'like_count'">ORDER BY like_count</when>
+            <when test="q.sortBy == 'size'">ORDER BY size</when>
+            <otherwise>ORDER BY create_time</otherwise>
+        </choose>
+        <choose>
+            <when test="q.order == 'asc'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+        LIMIT #{q.offset}, #{q.size}
+    </select>
+
+    <select id="countList" resultType="long">
+        SELECT COUNT(*)
+        FROM video
+        <where>
+            deleted = 0
+            AND status = 1
+            <if test="q.keyword != null and q.keyword != ''">
+                AND (title LIKE CONCAT('%', #{q.keyword}, '%')
+                OR description LIKE CONCAT('%', #{q.keyword}, '%'))
+            </if>
+            <if test="q.category != null and q.category != '' and q.category != '全部'">
+                AND category = #{q.category}
+            </if>
+        </where>
+    </select>
+
+    <update id="deleteById">
+        UPDATE video SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0 AND status = 1
+    </update>
+
+    <update id="incrementPlayCount">
+        UPDATE video SET play_count = play_count + 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0 AND status = 1
+    </update>
+
+    <update id="incrementLikeCount">
+        UPDATE video SET like_count = like_count + 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0 AND status = 1
+    </update>
+
+    <select id="selectCategories" resultType="string">
+        SELECT DISTINCT category
+        FROM video
+        WHERE deleted = 0 AND status = 1 AND category IS NOT NULL AND category != ''
+        ORDER BY category
+    </select>
+
+    <select id="selectHot" resultMap="VideoMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM video
+        WHERE deleted = 0 AND status = 1
+        ORDER BY play_count DESC, create_time DESC
+        LIMIT #{limit}
+    </select>
+</mapper>
+
+

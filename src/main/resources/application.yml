@@ -1,19 +1,42 @@
 spring:
   application:
-    name: media-manager
+    name: video-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:video_db}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:AHxs5702}
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
-# 自定义配置：媒体管理器参数（用于验证配置读取）
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: pre.wc.mediamanager.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+video:
+  upload-path: ${VIDEO_UPLOAD_PATH:./uploads/}
+  cover-path: ${VIDEO_COVER_PATH:./uploads/covers/}
+
+logging:
+  level:
+    org.springframework.web.context.request.async: ERROR
+
+# 保留原有配置读取演示
 media:
   name: 媒体管理器
   version: 1.0.0
-  upload-dir: /data/media/uploads
+  upload-dir: ./uploads/
 
-# 第9/10题：app 配置（@Value 注入演示）
 app:
-  name: media-platform
+  name: video-backend
   version: 1.0.0
   admin:
     email: admin@media.com

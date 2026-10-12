@@ -1,53 +1,36 @@
 package pre.wc.mediamanager.common;
 
-/**
- * 通用层：统一返回结果封装。
- * 用于规范接口返回值结构（code / message / data）。
- */
-public class Result<T> {
+import lombok.Data;
 
+@Data
+public class Result<T> {
     private Integer code;
     private String message;
     private T data;
 
-    public Result() {
+    public static <T> Result<T> success(T data) {
+        return build(200, "success", data);
     }
 
-    public Result(Integer code, String message, T data) {
-        this.code = code;
-        this.message = message;
-        this.data = data;
-    }
-
-    public static <T> Result<T> ok(T data) {
-        return new Result<>(200, "success", data);
+    public static <T> Result<T> success() {
+        return success(null);
     }
 
     public static <T> Result<T> error(String message) {
-        return new Result<>(500, message, null);
+        return error(500, message);
     }
 
-    public Integer getCode() {
-        return code;
+    public static <T> Result<T> error(int code, String message) {
+        return build(code, message, null);
     }
 
-    public void setCode(Integer code) {
-        this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
+    private static <T> Result<T> build(int code, String message, T data) {
+        Result<T> result = new Result<>();
+        result.setCode(code);
+        result.setMessage(message);
+        result.setData(data);
+        return result;
     }
 }
+
+

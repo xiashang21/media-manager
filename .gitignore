@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### VideoHub runtime files
+uploads/
+video-frontend/node_modules/
+video-frontend/dist/
+video-frontend/.env.local
+
