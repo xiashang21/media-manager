@@ -64,9 +64,7 @@ media-manager/
 ├─ video-frontend/          Vue 3 前端
 ├─ scripts/verify.ps1       一键验收脚本
 ├─ docs/evidence/           验收输出与截图
-├─ schema.sql               建库建表脚本
-├─ migration.sql            旧库迁移脚本（可重复执行）
-├─ data.sql                 30 条演示数据
+│  （schema.sql / data.sql / migration.sql 已移至上级“实训4”提交目录，不放在项目内）
 └─ README.md
 ```
 
@@ -74,15 +72,17 @@ media-manager/
 
 ### 1. 全新初始化
 
+> 数据库脚本已移到上级“实训4”提交目录，请在提交目录下执行以下命令。
+
 ```powershell
-Get-Content -Raw schema.sql | mysql -u root -p --default-character-set=utf8mb4
-Get-Content -Raw data.sql | mysql -u root -p --default-character-set=utf8mb4
+Get-Content -Raw ..\schema.sql | mysql -u root -p --default-character-set=utf8mb4
+Get-Content -Raw ..\data.sql | mysql -u root -p --default-character-set=utf8mb4
 ```
 
 ### 2. 已有数据库迁移
 
 ```powershell
-Get-Content -Raw migration.sql | mysql -u root -p --default-character-set=utf8mb4
+Get-Content -Raw ..\migration.sql | mysql -u root -p --default-character-set=utf8mb4
 ```
 
 `migration.sql` 可以重复执行，会自动补齐 `app_user`、`video_like` 表和 `video` 表的归属、封面字段，并创建对应索引和外键。
