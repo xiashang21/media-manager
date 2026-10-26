@@ -1,0 +1,49 @@
+
+== 0. 等待后端可用 ==
+  [PASS] 后端已就绪：http://localhost:8080
+
+== 1. 注册、登录与 JWT ==
+  [PASS] 用户 A 注册成功 (qa_a_104413431)
+  [PASS] 用户 B 注册成功 (qa_b_104413431)
+  [PASS] 连续 5 次登录失败后触发限流返回 429
+  [PASS] JWT 身份校验通过 (/api/auth/me)
+
+== 2. 公开/受保护接口与缓存耗时 ==
+  缓存探针关键词：cache-104413431
+  [PASS] 视频分页接口匿名可访问
+  首次请求 4.69 ms，缓存命中 3.04 ms
+  [PASS] 未登录点赞返回 401
+  [PASS] 匿名播放计数返回 200
+  [PASS] 链路响应头 X-Request-Id=verify104413431, X-Response-Time=0ms
+
+== 3. 上传视频 + 封面 ==
+  [PASS] 上传前关键词缓存为空
+  [PASS] 视频与封面上传成功
+  [PASS] 上传响应包含创建时间
+  [PASS] 封面地址已生成：/api/video/cover/eb90dceef1de4f99a101bdd9a4811a83.jpg
+  [PASS] 上传后分页缓存已失效并可查到新视频
+
+== 4. 封面读取、详情与 Range 播放 ==
+  [PASS] 详情返回正确 ownerId
+  [PASS] 封面读取返回 200
+  [PASS] 封面 Content-Type=image/jpeg
+  [PASS] Range 播放返回 206 Partial Content
+  [PASS] Content-Range=bytes 0-99/4096
+
+== 5. 点赞去重与资源归属校验 ==
+  [PASS] 用户 A 首次点赞成功，点赞数加一
+  [PASS] 同一用户再次点赞变为取消，点赞数减一
+  [PASS] 用户 B 删除用户 A 的视频返回 403
+  [PASS] 用户 A 更换封面成功
+  [PASS] 换封面后 URL 已更新
+
+== 6. 删除与缓存再次失效 ==
+  [PASS] 用户 A 删除自己的视频成功
+  [PASS] 删除后分页缓存已失效且查询为空
+  [PASS] 删除后详情返回 404
+
+== 7. 清理测试数据 ==
+  [PASS] 测试用户与视频记录已从数据库清理
+
+== 验收汇总 ==
+通过 28 项，失败 0 项

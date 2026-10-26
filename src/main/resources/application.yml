@@ -19,24 +19,34 @@ mybatis:
   type-aliases-package: pre.wc.mediamanager.entity
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
 video:
   upload-path: ${VIDEO_UPLOAD_PATH:./uploads/}
   cover-path: ${VIDEO_COVER_PATH:./uploads/covers/}
 
+app:
+  name: video-backend
+  version: 2.0.0
+  admin:
+    email: admin@media.com
+  jwt:
+    secret: ${JWT_SECRET:VideoHub-2026-secure-jwt-secret-change-in-production-9f4c2a}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
+  cors:
+    allowed-origins: ${APP_CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+
 logging:
   level:
+    root: INFO
+    pre.wc.mediamanager: INFO
+    pre.wc.mediamanager.mapper: DEBUG
     org.springframework.web.context.request.async: ERROR
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-no-trace}] [%X{userId:-anonymous}] %logger{36} - %msg%n"
 
 # 保留原有配置读取演示
 media:
   name: 媒体管理器
-  version: 1.0.0
+  version: 2.0.0
   upload-dir: ./uploads/
-
-app:
-  name: video-backend
-  version: 1.0.0
-  admin:
-    email: admin@media.com

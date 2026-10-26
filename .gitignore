@@ -33,8 +33,10 @@ build/
 .vscode/
 
 ### VideoHub runtime files
+logs/
+*.log
 uploads/
 video-frontend/node_modules/
 video-frontend/dist/
 video-frontend/.env.local
-
+docs/.buildtools/

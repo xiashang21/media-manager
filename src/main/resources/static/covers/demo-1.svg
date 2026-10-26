@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/><stop offset="0.55" stop-color="#0e5cff"/><stop offset="1" stop-color="#21d4fd"/>
+    </linearGradient>
+    <radialGradient id="r" cx=".75" cy=".25" r=".8">
+      <stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#g)"/>
+  <rect width="800" height="450" fill="url(#r)"/>
+  <path d="M 620 80 C 760 20 840 160 760 250 C 690 330 560 260 620 170 Z" fill="#fff" fill-opacity=".13"/>
+  <circle cx="690" cy="330" r="130" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="2"/>
+  <circle cx="690" cy="330" r="95" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="2"/>
+  <path d="M0 390 C160 330 290 430 450 370 C610 310 700 390 800 350 L800 450 L0 450 Z" fill="#05070d" fill-opacity=".28"/>
+  <text x="58" y="130" fill="#fff" font-size="16" font-family="Arial, sans-serif" letter-spacing="8" opacity=".65">VIDEOHUB / CINEMA</text>
+  <text x="58" y="330" fill="#fff" font-size="92" font-family="Arial, sans-serif" font-weight="800" opacity=".94">01</text>
+  <text x="60" y="370" fill="#fff" font-size="18" font-family="Arial, sans-serif" letter-spacing="3" opacity=".75">MEDIA MANAGER</text>
+</svg>

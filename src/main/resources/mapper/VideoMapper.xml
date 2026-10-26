@@ -4,43 +4,46 @@
 <mapper namespace="pre.wc.mediamanager.mapper.VideoMapper">
 
     <resultMap id="VideoMap" type="pre.wc.mediamanager.entity.Video">
-        <id     column="id"            property="id"/>
-        <result column="title"         property="title"/>
-        <result column="description"   property="description"/>
-        <result column="file_name"     property="fileName"/>
-        <result column="original_name" property="originalName"/>
-        <result column="url"           property="url"/>
-        <result column="cover_url"     property="coverUrl"/>
-        <result column="size"          property="size"/>
-        <result column="duration"      property="duration"/>
-        <result column="format"        property="format"/>
-        <result column="category"      property="category"/>
-        <result column="tags"          property="tags"/>
-        <result column="play_count"    property="playCount"/>
-        <result column="like_count"    property="likeCount"/>
-        <result column="uploader"      property="uploader"/>
-        <result column="status"        property="status"/>
-        <result column="create_time"   property="createTime"/>
-        <result column="update_time"   property="updateTime"/>
-        <result column="deleted"       property="deleted"/>
+        <id     column="id"              property="id"/>
+        <result column="title"           property="title"/>
+        <result column="description"     property="description"/>
+        <result column="file_name"       property="fileName"/>
+        <result column="original_name"   property="originalName"/>
+        <result column="url"             property="url"/>
+        <result column="cover_file_name" property="coverFileName"/>
+        <result column="cover_url"       property="coverUrl"/>
+        <result column="size"            property="size"/>
+        <result column="duration"        property="duration"/>
+        <result column="format"          property="format"/>
+        <result column="category"        property="category"/>
+        <result column="tags"            property="tags"/>
+        <result column="play_count"      property="playCount"/>
+        <result column="like_count"      property="likeCount"/>
+        <result column="owner_id"        property="ownerId"/>
+        <result column="uploader"        property="uploader"/>
+        <result column="status"          property="status"/>
+        <result column="create_time"     property="createTime"/>
+        <result column="update_time"     property="updateTime"/>
+        <result column="deleted"         property="deleted"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, title, description, file_name, original_name, url, cover_url,
-        size, duration, format, category, tags, play_count, like_count,
+        id, title, description, file_name, original_name, url, cover_file_name, cover_url,
+        size, duration, format, category, tags, play_count, like_count, owner_id,
         uploader, status, create_time, update_time, deleted
     </sql>
 
     <insert id="insert" parameterType="pre.wc.mediamanager.entity.Video"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO video
-        (title, description, file_name, original_name, url, cover_url,
-         size, duration, format, category, tags, play_count, like_count,
+        (title, description, file_name, original_name, url, cover_file_name, cover_url,
+         size, duration, format, category, tags, play_count, like_count, owner_id,
          uploader, status, create_time, update_time, deleted)
         VALUES
-            (#{title}, #{description}, #{fileName}, #{originalName}, #{url}, #{coverUrl},
-             #{size}, #{duration}, #{format}, #{category}, #{tags}, #{playCount}, #{likeCount},
-             #{uploader}, #{status}, NOW(), NOW(), 0)
+            (#{title}, #{description}, #{fileName}, #{originalName}, #{url},
+             #{coverFileName}, #{coverUrl}, #{size}, #{duration}, #{format}, #{category},
+             #{tags}, #{playCount}, #{likeCount}, #{ownerId}, #{uploader}, #{status},
+             NOW(), NOW(), 0)
     </insert>
 
     <select id="selectById" resultMap="VideoMap">
@@ -97,6 +100,12 @@
         WHERE id = #{id} AND deleted = 0 AND status = 1
     </update>
 
+    <update id="updateCover">
+        UPDATE video
+        SET cover_file_name = #{coverFileName}, cover_url = #{coverUrl}, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0 AND status = 1
+    </update>
+
     <update id="incrementPlayCount">
         UPDATE video SET play_count = play_count + 1, update_time = NOW()
         WHERE id = #{id} AND deleted = 0 AND status = 1
@@ -106,6 +115,28 @@
         UPDATE video SET like_count = like_count + 1, update_time = NOW()
         WHERE id = #{id} AND deleted = 0 AND status = 1
     </update>
+
+    <update id="decrementLikeCount">
+        UPDATE video SET like_count = GREATEST(like_count - 1, 0), update_time = NOW()
+        WHERE id = #{id} AND deleted = 0 AND status = 1
+    </update>
+
+    <select id="selectLikeCount" resultType="long">
+        SELECT like_count FROM video WHERE id = #{id} AND deleted = 0 AND status = 1
+    </select>
+
+    <select id="countLike" resultType="int">
+        SELECT COUNT(*) FROM video_like WHERE user_id = #{userId} AND video_id = #{videoId}
+    </select>
+
+    <insert id="insertLike">
+        INSERT INTO video_like (user_id, video_id, create_time)
+        VALUES (#{userId}, #{videoId}, NOW())
+    </insert>
+
+    <delete id="deleteLike">
+        DELETE FROM video_like WHERE user_id = #{userId} AND video_id = #{videoId}
+    </delete>
 
     <select id="selectCategories" resultType="string">
         SELECT DISTINCT category
@@ -122,5 +153,3 @@
         LIMIT #{limit}
     </select>
 </mapper>
-
-

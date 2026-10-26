@@ -1,0 +1,47 @@
+Tables_in_video_db
+app_user
+video
+Field	Type	Null	Key	Default	Extra
+id	bigint	NO	PRI	NULL	auto_increment
+username	varchar(32)	NO	UNI	NULL	
+password_hash	varchar(100)	NO		NULL	
+nickname	varchar(50)	NO		NULL	
+role	varchar(20)	NO		USER	
+status	tinyint	NO	MUL	1	
+last_login_time	datetime	YES		NULL	
+create_time	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+update_time	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+Field	Type	Null	Key	Default	Extra
+id	bigint	NO	PRI	NULL	auto_increment
+title	varchar(200)	NO		NULL	
+description	varchar(500)	YES		NULL	
+file_name	varchar(255)	NO		NULL	
+original_name	varchar(255)	NO		NULL	
+url	varchar(500)	NO		NULL	
+cover_file_name	varchar(255)	YES		NULL	
+cover_url	varchar(500)	YES		NULL	
+size	bigint	NO		0	
+duration	int	NO		0	
+format	varchar(20)	YES		NULL	
+category	varchar(50)	NO	MUL	默认	
+tags	varchar(255)	YES		NULL	
+play_count	bigint	NO	MUL	0	
+like_count	bigint	NO		0	
+owner_id	bigint	NO	MUL	1	
+uploader	varchar(50)	NO		anonymous	
+status	tinyint	NO	MUL	1	
+create_time	datetime	NO	MUL	CURRENT_TIMESTAMP	DEFAULT_GENERATED
+update_time	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+deleted	tinyint	NO		0	
+Table	Non_unique	Key_name	Seq_in_index	Column_name	Collation	Cardinality	Sub_part	Packed	Null	Index_type	Comment	Index_comment	Visible	Expression
+video	0	PRIMARY	1	id	A	31	NULL	NULL		BTREE			YES	NULL
+video	1	idx_category	1	category	A	6	NULL	NULL		BTREE			YES	NULL
+video	1	idx_create_time	1	create_time	A	31	NULL	NULL		BTREE			YES	NULL
+video	1	idx_status_deleted	1	status	A	1	NULL	NULL		BTREE			YES	NULL
+video	1	idx_status_deleted	2	deleted	A	2	NULL	NULL		BTREE			YES	NULL
+video	1	idx_play_count	1	play_count	A	31	NULL	NULL		BTREE			YES	NULL
+video	1	idx_owner_id	1	owner_id	A	4	NULL	NULL		BTREE			YES	NULL
+video_count
+30
+user_count
+1

@@ -25,10 +25,27 @@
           <option value="like_count">点赞最多</option>
           <option value="size">文件最大</option>
         </select>
-        <button class="btn ghost" type="button" @click="toggleOrder">
+        <button class="btn ghost order-btn" type="button" @click="toggleOrder">
           {{ query.order === 'desc' ? '↓ 降序' : '↑ 升序' }}
         </button>
-        <button class="btn primary" type="button" @click="showUpload = true">＋ 上传视频</button>
+        <button class="btn primary" type="button" @click="handleUploadClick">＋ 上传视频</button>
+
+        <div class="account-area">
+          <template v-if="user">
+            <div class="user-chip" :title="`${user.username} · ${user.role}`">
+              <span class="avatar">{{ (user.nickname || user.username).slice(0, 1).toUpperCase() }}</span>
+              <span class="user-copy">
+                <strong>{{ user.nickname || user.username }}</strong>
+                <small>{{ user.role === 'ADMIN' ? '管理员' : '创作者' }}</small>
+              </span>
+            </div>
+            <button class="btn ghost mini" type="button" @click="handleLogout">退出</button>
+          </template>
+          <template v-else>
+            <button class="btn ghost mini" type="button" @click="openAuth('login')">登录</button>
+            <button class="btn ghost mini" type="button" @click="openAuth('register')">注册</button>
+          </template>
+        </div>
       </div>
     </header>
 
@@ -62,7 +79,12 @@
         </div>
       </div>
       <div class="hero-art" @click="openPlayer(heroVideo)">
-        <img v-if="heroVideo.coverUrl" :src="heroVideo.coverUrl" :alt="heroVideo.title" />
+        <img
+          v-if="heroVideo.coverUrl && !heroCoverFailed"
+          :src="streamUrl(heroVideo.coverUrl)"
+          :alt="heroVideo.title"
+          @error="heroCoverFailed = true"
+        />
         <div v-else class="hero-fallback"><span>{{ heroVideo.title?.slice(0, 1) }}</span></div>
         <div class="hero-play">▶</div>
       </div>
@@ -86,7 +108,13 @@
           <span>换个关键词，或者上传一个新的视频试试。</span>
         </div>
         <div v-else class="video-grid">
-          <VideoCard v-for="video in videos" :key="video.id" :video="video" @play="openPlayer" />
+          <VideoCard
+            v-for="video in videos"
+            :key="video.id"
+            :video="video"
+            :current-user-id="user?.id"
+            @play="openPlayer"
+          />
         </div>
 
         <div v-if="totalPages > 1" class="pagination">
@@ -122,6 +150,7 @@
     <UploadDrawer
       :open="showUpload"
       :categories="categories"
+      :current-user="user"
       @close="showUpload = false"
       @uploaded="handleUploaded"
       @notify="notify"
@@ -130,10 +159,20 @@
     <PlayerModal
       v-if="current"
       :video="current"
+      :can-manage="canManageCurrent"
       @close="closePlayer"
       @play="handlePlay"
       @like="handleLike"
       @delete="handleDelete"
+      @cover-updated="handleCoverUpdated"
+      @notify="notify"
+    />
+
+    <AuthModal
+      :open="showAuth"
+      :mode="authMode"
+      @close="showAuth = false"
+      @success="handleAuthSuccess"
     />
 
     <div class="toast-stack">
@@ -146,10 +185,12 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import VideoCard from './components/VideoCard.vue'
 import UploadDrawer from './components/UploadDrawer.vue'
 import PlayerModal from './components/PlayerModal.vue'
+import AuthModal from './components/AuthModal.vue'
+import { fetchMe, logout as logoutApi } from './api/auth'
 import {
   fetchCategories,
   fetchHotVideos,
@@ -158,7 +199,15 @@ import {
   increaseLike,
   increasePlay,
   removeVideo,
+  streamUrl,
 } from './api/video'
+import {
+  clearSession,
+  getCurrentUser,
+  getToken,
+  saveSession,
+  updateSessionUser,
+} from './utils/session'
 
 const videos = ref([])
 const categories = ref(['全部'])
@@ -168,6 +217,10 @@ const total = ref(0)
 const showUpload = ref(false)
 const current = ref(null)
 const toasts = ref([])
+const user = ref(getCurrentUser())
+const showAuth = ref(false)
+const authMode = ref('login')
+const heroCoverFailed = ref(false)
 
 const query = reactive({
   page: 1,
@@ -180,6 +233,11 @@ const query = reactive({
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / query.size)))
 const heroVideo = computed(() => hotVideos.value[0] || videos.value[0] || null)
+watch(() => heroVideo.value?.coverUrl, () => { heroCoverFailed.value = false })
+const canManageCurrent = computed(() => {
+  if (!current.value || !user.value) return false
+  return user.value.role === 'ADMIN' || Number(current.value.ownerId) === Number(user.value.id)
+})
 
 const notify = ({ type = 'success', message }) => {
   const id = Date.now() + Math.random()
@@ -269,11 +327,16 @@ const handlePlay = async () => {
 
 const handleLike = async () => {
   if (!current.value) return
+  if (!user.value) {
+    openAuth('login')
+    notify({ type: 'error', message: '登录后才能点赞' })
+    return
+  }
   try {
-    await increaseLike(current.value.id)
-    syncVideo(current.value.id, { likeCount: Number(current.value.likeCount || 0) + 1 })
+    const result = await increaseLike(current.value.id)
+    syncVideo(current.value.id, { likeCount: Number(result?.likeCount ?? current.value.likeCount ?? 0) })
     loadHot()
-    notify({ message: '点赞成功' })
+    notify({ message: result?.liked ? '点赞成功' : '已取消点赞' })
   } catch (error) {
     notify({ type: 'error', message: error.message })
   }
@@ -297,10 +360,76 @@ const handleUploaded = () => {
   Promise.all([loadVideos(), loadCategories(), loadHot()])
 }
 
+const handleCoverUpdated = (updated) => {
+  if (!updated?.id) return
+  if (current.value?.id === updated.id) current.value = { ...current.value, ...updated }
+  syncVideo(updated.id, { coverUrl: updated.coverUrl })
+  loadHot()
+}
+
+const openAuth = (mode = 'login') => {
+  authMode.value = mode === 'register' ? 'register' : 'login'
+  showAuth.value = true
+}
+
+const handleAuthSuccess = (data) => {
+  const session = saveSession(data)
+  user.value = session.user
+  showAuth.value = false
+  notify({ message: `欢迎，${session.user.nickname || session.user.username}` })
+}
+
+const handleLogout = async () => {
+  try {
+    await logoutApi()
+  } catch {
+    // JWT 无状态，即使服务端不可达也允许清理本地登录态
+  }
+  clearSession()
+  user.value = null
+  current.value = null
+  showAuth.value = false
+  notify({ message: '已安全退出' })
+}
+
+const handleUnauthorized = () => {
+  user.value = null
+  showAuth.value = true
+  authMode.value = 'login'
+  notify({ type: 'error', message: '登录已失效，请重新登录' })
+}
+
+const handleUploadClick = () => {
+  if (!user.value) {
+    openAuth('login')
+    notify({ type: 'error', message: '请先登录后再上传视频' })
+    return
+  }
+  showUpload.value = true
+}
+
+const verifySession = async () => {
+  if (!getToken()) return
+  try {
+    const me = await fetchMe()
+    user.value = me
+    updateSessionUser(me)
+  } catch {
+    clearSession()
+    user.value = null
+  }
+}
+
 onMounted(() => {
   loadVideos()
   loadCategories()
   loadHot()
+  verifySession()
+  window.addEventListener('videohub:unauthorized', handleUnauthorized)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('videohub:unauthorized', handleUnauthorized)
 })
 </script>
 
@@ -326,8 +455,16 @@ onMounted(() => {
 }
 .search-icon { color: var(--accent); font-size: 19px; }
 .search input { flex: 1; min-width: 120px; border: 0; background: transparent; outline: none; color: var(--text); padding: 9px 0; }
-.top-actions { display: flex; align-items: center; gap: 9px; }
-.top-actions .select { width: auto; min-width: 124px; padding: 9px 12px; }
+.top-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+.top-actions .select { width: auto; min-width: 118px; padding: 9px 12px; }
+.order-btn { padding: 10px 12px; }
+.mini { padding: 9px 11px; font-size: 12px; }
+.account-area { display: flex; align-items: center; gap: 7px; padding-left: 9px; margin-left: 3px; border-left: 1px solid var(--line); }
+.user-chip { display: flex; align-items: center; gap: 8px; padding: 5px 9px 5px 5px; border-radius: 12px; background: #f4f8fe; border: 1px solid #e2ecf9; }
+.avatar { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 900; background: linear-gradient(135deg, #1677ff, #50a4ff); }
+.user-copy { display: grid; gap: 1px; min-width: 58px; }
+.user-copy strong { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.user-copy small { color: var(--muted); font-size: 9px; }
 .category-bar { display: flex; gap: 9px; overflow-x: auto; padding: 3px 2px 14px; }
 .category-chip {
   flex: 0 0 auto; border: 1px solid var(--line); background: #fff; color: var(--muted);
@@ -379,6 +516,10 @@ onMounted(() => {
 .toast-stack { position: fixed; z-index: 100; right: 22px; top: 22px; display: grid; gap: 10px; }
 .toast { border-radius: 13px; padding: 12px 15px; min-width: 180px; max-width: 360px; background: #fff; color: var(--text); border-color: #cfe2ff; }
 .toast.error { border-color: #f4c7c9; color: var(--danger); }
+@media (max-width: 1250px) {
+  .topbar { flex-wrap: wrap; }
+  .search { order: 3; width: 100%; flex-basis: 100%; }
+}
 @media (max-width: 1120px) {
   .content { grid-template-columns: 1fr; }
   .hot-panel { position: static; }
@@ -390,7 +531,8 @@ onMounted(() => {
 }
 @media (max-width: 640px) {
   .page { padding: 10px 10px 30px; }
-  .top-actions { width: 100%; flex-wrap: wrap; }
+  .top-actions { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+  .account-area { margin-left: auto; border-left: 0; padding-left: 0; }
   .video-grid { grid-template-columns: 1fr; }
 }
 </style>

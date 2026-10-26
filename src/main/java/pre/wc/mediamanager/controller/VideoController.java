@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceRegion;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pre.wc.mediamanager.common.PageResult;
 import pre.wc.mediamanager.common.Result;
+import pre.wc.mediamanager.entity.dto.LikeResult;
 import pre.wc.mediamanager.entity.dto.VideoQueryDTO;
 import pre.wc.mediamanager.entity.dto.VideoVO;
 import pre.wc.mediamanager.service.VideoService;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 
 @RestController
@@ -44,18 +47,28 @@ public class VideoController {
     @Value("${video.upload-path}")
     private String uploadPath;
 
-    /** 上传 */
+    @Value("${video.cover-path}")
+    private String coverPath;
+
+    /** 上传视频，可选同时上传封面。 */
     @PostMapping("/upload")
     public Result<VideoVO> upload(
             @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "cover", required = false) MultipartFile cover,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "tags", required = false) String tags,
-            @RequestParam(value = "uploader", required = false) String uploader,
             @RequestParam(value = "duration", required = false) Integer clientDuration) {
         return Result.success(videoService.upload(
-                file, title, description, category, tags, uploader, clientDuration));
+                file, cover, title, description, category, tags, clientDuration));
+    }
+
+    /** 为已有视频单独更换封面，仅视频所有者或管理员可操作。 */
+    @PostMapping("/{id}/cover")
+    public Result<VideoVO> updateCover(@PathVariable Long id,
+                                       @RequestParam("cover") MultipartFile cover) {
+        return Result.success(videoService.updateCover(id, cover));
     }
 
     /** 分页 */
@@ -84,11 +97,10 @@ public class VideoController {
         return Result.success();
     }
 
-    /** 点赞 */
+    /** 点赞或取消点赞（切换） */
     @PostMapping("/{id}/like")
-    public Result<Void> like(@PathVariable Long id) {
-        videoService.like(id);
-        return Result.success();
+    public Result<LikeResult> like(@PathVariable Long id) {
+        return Result.success(videoService.like(id));
     }
 
     /** 分类列表 */
@@ -103,15 +115,31 @@ public class VideoController {
         return Result.success(videoService.hotVideos(limit));
     }
 
+    /** 读取上传的封面图片，公开访问并允许浏览器缓存。 */
+    @GetMapping("/cover/{fileName:.+}")
+    public ResponseEntity<Resource> cover(@PathVariable String fileName) throws IOException {
+        Path path = resolveStoredPath(coverPath, fileName);
+        if (path == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Resource resource = new FileSystemResource(path);
+        MediaType mediaType = MediaTypeFactory.getMediaType(resource)
+                .orElse(MediaType.APPLICATION_OCTET_STREAM);
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(7)).cachePublic().immutable())
+                .body(resource);
+    }
+
     /**
      * 视频流式播放：使用 ResponseEntity<ResourceRegion> 返回分片。
      * 无 Range 时返回前 1MB；有 Range 时返回 206 Partial Content。
      */
-    @GetMapping("/stream/{fileName}")
+    @GetMapping("/stream/{fileName:.+}")
     public ResponseEntity<ResourceRegion> stream(
             @PathVariable String fileName,
             @RequestHeader(value = "Range", required = false) String rangeHeader) throws IOException {
-        Path path = resolveVideoPath(fileName);
+        Path path = resolveStoredPath(uploadPath, fileName);
         if (path == null) {
             return ResponseEntity.notFound().build();
         }
@@ -177,11 +205,11 @@ public class VideoController {
                 .build();
     }
 
-    private Path resolveVideoPath(String fileName) {
-        if (!StringUtils.hasText(uploadPath) || !StringUtils.hasText(fileName)) {
+    private Path resolveStoredPath(String configuredRoot, String fileName) {
+        if (!StringUtils.hasText(configuredRoot) || !StringUtils.hasText(fileName)) {
             return null;
         }
-        Path root = Paths.get(uploadPath).toAbsolutePath().normalize();
+        Path root = Paths.get(configuredRoot).toAbsolutePath().normalize();
         Path path = root.resolve(fileName).normalize();
         if (path.equals(root) || !path.startsWith(root) || !Files.isRegularFile(path)) {
             return null;

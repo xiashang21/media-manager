@@ -26,11 +26,31 @@ public interface VideoMapper {
     /** 逻辑删除 */
     int deleteById(@Param("id") Long id);
 
+    /** 更新视频封面 */
+    int updateCover(@Param("id") Long id,
+                    @Param("coverFileName") String coverFileName,
+                    @Param("coverUrl") String coverUrl);
+
     /** 播放量 +1 */
     int incrementPlayCount(@Param("id") Long id);
 
     /** 点赞数 +1 */
     int incrementLikeCount(@Param("id") Long id);
+
+    /** 点赞数 -1（不低于 0） */
+    int decrementLikeCount(@Param("id") Long id);
+
+    /** 查询当前点赞数 */
+    Long selectLikeCount(@Param("id") Long id);
+
+    /** 当前用户是否已点赞 */
+    int countLike(@Param("userId") Long userId, @Param("videoId") Long videoId);
+
+    /** 写入点赞记录 */
+    int insertLike(@Param("userId") Long userId, @Param("videoId") Long videoId);
+
+    /** 删除点赞记录 */
+    int deleteLike(@Param("userId") Long userId, @Param("videoId") Long videoId);
 
     /** 所有分类去重 */
     List<String> selectCategories();
@@ -38,4 +58,3 @@ public interface VideoMapper {
     /** 热门视频（按播放量倒序） */
     List<Video> selectHot(@Param("limit") int limit);
 }
-

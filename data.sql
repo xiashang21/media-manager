@@ -37,3 +37,8 @@ VALUES
 (29, 'Bear 动画短视频 #29', '轻量动画测试视频，适合验证列表、卡片、播放量和点赞功能。', 'demo_29.mp4', 'sample_29.mp4', 'https://www.w3schools.com/html/movie.mp4', NULL, 847885, 6, 'mp4', '动画', 'Bear,动画,短视频', 1193, 581, 'demo', 1, NOW() - INTERVAL 29 DAY, NOW(), 0),
 (30, 'Big Buck Bunny 完整版 #30', 'W3C 媒体测试视频，时长约 1 分钟，适合演示长视频播放和断点续播。', 'demo_30.mp4', 'sample_30.mp4', 'https://media.w3.org/2010/05/bunny/movie.mp4', NULL, 5572312, 60, 'mp4', '动画', 'BigBuckBunny,W3C,完整版', 1230, 600, 'admin', 1, NOW() - INTERVAL 30 DAY, NOW(), 0);
 
+-- 为演示数据补充本地封面；重复执行不会覆盖用户自己上传的封面。
+USE video_db;
+UPDATE `video`
+SET `cover_url` = CONCAT('/covers/demo-', MOD(`id` - 1, 6) + 1, '.svg')
+WHERE `id` BETWEEN 1 AND 30 AND (`cover_url` IS NULL OR `cover_url` = '');

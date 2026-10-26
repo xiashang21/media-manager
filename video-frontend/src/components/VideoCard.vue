@@ -1,10 +1,16 @@
 <template>
   <article class="card" @click="$emit('play', video)">
     <div class="cover">
-      <img v-if="video.coverUrl" :src="video.coverUrl" :alt="video.title" />
+      <img
+        v-if="video.coverUrl && !coverFailed"
+        :src="streamUrl(video.coverUrl)"
+        :alt="video.title"
+        @error="coverFailed = true"
+      />
       <div v-else class="cover-fallback">
         <span>{{ video.title?.slice(0, 1) || 'V' }}</span>
       </div>
+      <span v-if="isMine" class="mine-badge">我的视频</span>
       <div class="badges">
         <span class="badge">{{ video.format?.toUpperCase() || 'VIDEO' }}</span>
         <span class="badge time">{{ video.durationText }}</span>
@@ -37,10 +43,18 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed, ref, watch } from 'vue'
+import { streamUrl } from '../api/video'
+
+const props = defineProps({
   video: { type: Object, required: true },
+  currentUserId: { type: [Number, String], default: null },
 })
 defineEmits(['play'])
+
+const coverFailed = ref(false)
+const isMine = computed(() => props.currentUserId && Number(props.video.ownerId) === Number(props.currentUserId))
+watch(() => props.video.coverUrl, () => { coverFailed.value = false })
 
 const formatNumber = (value) => {
   const number = Number(value || 0)
@@ -63,6 +77,7 @@ const formatDate = (value) => {
 .badges { position: absolute; left: 10px; right: 10px; top: 10px; display: flex; justify-content: space-between; }
 .badge { border-radius: 999px; padding: 4px 9px; font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #fff; background: var(--accent); }
 .badge.time { color: #fff; background: rgba(15,23,42,.62); }
+.mine-badge { position: absolute; left: 10px; bottom: 10px; border-radius: 999px; padding: 4px 9px; color: #fff; background: rgba(10, 105, 242, .82); font-size: 10px; font-weight: 800; letter-spacing: .03em; backdrop-filter: blur(8px); }
 .play { position: absolute; right: 12px; bottom: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #fff; color: var(--accent); font-size: 15px; display: grid; place-items: center; box-shadow: 0 8px 20px rgba(15,23,42,.2); }
 .play:hover { background: var(--accent); color: #fff; }
 .body { padding: 13px 14px 14px; }

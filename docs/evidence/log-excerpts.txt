@@ -1,0 +1,33 @@
+=== 一次 /api/auth/me 请求的链路日志 ===
+2026-10-26 09:22:17.121 DEBUG [http-nio-8080-exec-6] [trace=evidence20261026] [user=1] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.mapper.UserMapper.selectById - ==>  Preparing: SELECT id, username, password_hash, nickname, role, status, create_time, update_time, last_login_time FROM app_user WHERE id = ? LIMIT 1
+2026-10-26 09:22:17.121 DEBUG [http-nio-8080-exec-6] [trace=evidence20261026] [user=1] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.mapper.UserMapper.selectById - ==> Parameters: 1(Long)
+2026-10-26 09:22:17.121 DEBUG [http-nio-8080-exec-6] [trace=evidence20261026] [user=1] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.mapper.UserMapper.selectById - <==      Total: 1
+2026-10-26 09:22:17.122 INFO  [http-nio-8080-exec-6] [trace=evidence20261026] [user=1] [ip=0:0:0:0:0:0:0:1] pre.wc.mediamanager.security.TraceIdFilter - HTTP GET /api/auth/me status=200 duration=5ms
+
+=== 缓存 MISS / PUT / HIT（同一 key）===
+2026-10-26 10:18:06.648 INFO  [http-nio-8080-exec-3] [trace=f12b4a4a2ee144b7b8f0581f648002b0] [user=anonymous] [ip=0:0:0:0:0:0:0:1] pre.wc.mediamanager.cache.LoggingCache - CACHE MISS name=videoPage key=page=1&size=5&keyword=cache-101803320&category=全部&sortBy=create_time&order=desc
+2026-10-26 10:18:06.692 DEBUG [http-nio-8080-exec-3] [trace=f12b4a4a2ee144b7b8f0581f648002b0] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.mapper.VideoMapper.countList - ==> Parameters: cache-101803320(String), cache-101803320(String)
+2026-10-26 10:18:06.696 INFO  [http-nio-8080-exec-3] [trace=f12b4a4a2ee144b7b8f0581f648002b0] [user=anonymous] [ip=0:0:0:0:0:0:0:1] pre.wc.mediamanager.cache.LoggingCache - CACHE PUT name=videoPage key=page=1&size=5&keyword=cache-101803320&category=全部&sortBy=create_time&order=desc
+2026-10-26 10:18:06.710 INFO  [http-nio-8080-exec-7] [trace=f4fd98d278f443f0938935630e8c0f5f] [user=anonymous] [ip=0:0:0:0:0:0:0:1] pre.wc.mediamanager.cache.LoggingCache - CACHE HIT name=videoPage key=page=1&size=5&keyword=cache-101803320&category=全部&sortBy=create_time&order=desc
+
+=== 安全分类日志：登录限流 429 / 401 / 403 / 登录成功 ===
+2026-10-26 10:18:05.095 WARN  [http-nio-8080-exec-6] [trace=1b62c210e87f406786e4bd1ae46a649b] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 鉴权失败 message=用户名或密码错误
+2026-10-26 10:18:05.433 WARN  [http-nio-8080-exec-10] [trace=fa6702c8855d49a495dc3ca78b561f27] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 鉴权失败 message=用户名或密码错误
+2026-10-26 10:18:05.836 WARN  [http-nio-8080-exec-8] [trace=9a596eb0296f4e9b91cd34e73454b8c0] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 鉴权失败 message=用户名或密码错误
+2026-10-26 10:18:06.187 WARN  [http-nio-8080-exec-9] [trace=3ae3506b9a504f65812078e2ce9d7c58] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 鉴权失败 message=用户名或密码错误
+2026-10-26 10:18:06.575 WARN  [http-nio-8080-exec-4] [trace=7c45a65b19c04c7cace238bb557dbe8f] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 鉴权失败 message=用户名或密码错误
+2026-10-26 10:18:06.577 WARN  [http-nio-8080-exec-1] [trace=143d91d886eb43e6bb807fe81d6c25e2] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.service.impl.AuthServiceImpl - 登录被限流 username=qa_b_101803320 reason=连续失败次数过多
+2026-10-26 10:18:06.745 WARN  [http-nio-8080-exec-6] [trace=a7ecea79680549ccac68596a019e20ac] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 鉴权失败 message=请先登录后再进行该操作
+2026-10-26 10:18:07.242 WARN  [http-nio-8080-exec-10] [trace=1977ef17e38f4fcaa8cd6b13274fe802] [user=27] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 越权访问被拒绝 message=只能管理自己上传的视频
+
+=== 业务分类日志：上传 / 换封面 / 删除 / 404 ===
+2026-10-26 10:14:19.015 INFO  [main] [trace=no-trace] [user=anonymous] [ip=unknown] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频上传成功 videoId=1 ownerId=7 file=ce2ee779b9624fe7890379edad75f423.mp4 cover=null size=10
+2026-10-26 10:15:19.050 INFO  [http-nio-8080-exec-10] [trace=12545c59f76e43f7ab2a54fb3781883f] [user=24] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频上传成功 videoId=51 ownerId=24 file=c92b8d0ee5ae4501a0cbc1e0db8944ab.mp4 cover=7f24bb3bf2d64c419d42d91137f9edd4.jpg size=4096
+2026-10-26 10:15:19.252 INFO  [http-nio-8080-exec-8] [trace=bf08d88968c94691b9312783c8e87203] [user=24] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频封面更新成功 videoId=51 ownerId=24 cover=097ee9cad4d94b6fa3f334c86941013c.jpg
+2026-10-26 10:15:19.263 INFO  [http-nio-8080-exec-9] [trace=d97d0414bb13416f888b21e8ff2ecb90] [user=24] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频删除成功 videoId=51 ownerId=24 fileCleanup=afterCommit
+2026-10-26 10:15:19.288 WARN  [http-nio-8080-exec-2] [trace=beed8b18cded428fa3916fcfd72746d8] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 业务异常 status=404 message=视频不存在或不可用
+2026-10-26 10:17:19.661 INFO  [main] [trace=no-trace] [user=anonymous] [ip=unknown] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频上传成功 videoId=1 ownerId=7 file=8de6cc91ea63437fa1b8a763701e4da6.mp4 cover=null size=10
+2026-10-26 10:18:07.074 INFO  [http-nio-8080-exec-4] [trace=38a474cc0dac48aeb6f6127bc33a1bdc] [user=26] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频上传成功 videoId=52 ownerId=26 file=80e2a175c06c438db5d42c06a0873010.mp4 cover=3c55b8fa3f324d6d8b6b30a6be1a9687.jpg size=4096
+2026-10-26 10:18:07.272 INFO  [http-nio-8080-exec-8] [trace=4ac6e06296724bfeb2b50ce1709c918a] [user=26] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频封面更新成功 videoId=52 ownerId=26 cover=339e6a1ff3d64e5b8a3ea6af6bcaf421.jpg
+2026-10-26 10:18:07.296 INFO  [http-nio-8080-exec-9] [trace=933bdaf2379f4a8ab4addbc07fc02f79] [user=26] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.service.impl.VideoServiceImpl - 视频删除成功 videoId=52 ownerId=26 fileCleanup=afterCommit
+2026-10-26 10:18:07.322 WARN  [http-nio-8080-exec-1] [trace=bfe8db02417d4ca29ef1e62efd9d1b68] [user=anonymous] [ip=0:0:0:0:0:0:0:1] p.wc.mediamanager.config.GlobalExceptionHandler - 业务异常 status=404 message=视频不存在或不可用
